@@ -12,7 +12,7 @@ import (
 func main() {
 	db, err := db.New()
 	if err != nil {
-		slog.Warn(err.Error())
+		slog.Error(err.Error())
 		panic("failed to connect database")
 	}
 
