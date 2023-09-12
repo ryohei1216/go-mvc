@@ -33,21 +33,19 @@ func (u *userControllerImpl) Get(w http.ResponseWriter, r *http.Request) {
 	var user model.User
 	if err := u.db.First(&user, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			res := view.Response{
+			res := view.ErrorResponse{
 				Message: "not found",
-				Data:    nil,
 			}
 
-			handleResponse(w, res, http.StatusNotFound)
+			handleErrorResponse(w, res, http.StatusNotFound)
 			return
 		}
 
-		res := view.Response{
+		res := view.ErrorResponse{
 			Message: "internal server error",
-			Data:    nil,
 		}
 
-		handleResponse(w, res, http.StatusInternalServerError)
+		handleErrorResponse(w, res, http.StatusInternalServerError)
 		return
 	}
 
@@ -59,12 +57,7 @@ func (u *userControllerImpl) Get(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: user.UpdatedAt,
 	}
 
-	res := view.Response{
-		Message: "success",
-		Data:    viewUser,
-	}
-
-	handleResponse(w, res, http.StatusOK)
+	handleResponse(w, viewUser, http.StatusOK)
 }
 
 func (u *userControllerImpl) Create(w http.ResponseWriter, r *http.Request) {
@@ -74,12 +67,11 @@ func (u *userControllerImpl) Create(w http.ResponseWriter, r *http.Request) {
 	dec.UseNumber()
 
 	if err := dec.Decode(&req); err != nil {
-		res := view.Response{
+		res := view.ErrorResponse{
 			Message: "bad request",
-			Data:    nil,
 		}
 
-		handleResponse(w, res, http.StatusBadRequest)
+		handleErrorResponse(w, res, http.StatusBadRequest)
 		return
 	}
 
@@ -89,24 +81,33 @@ func (u *userControllerImpl) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := u.db.Create(&user).Error; err != nil {
-		res := view.Response{
+		res := view.ErrorResponse{
 			Message: "internal server error",
-			Data:    nil,
 		}
 
-		handleResponse(w, res, http.StatusInternalServerError)
+		handleErrorResponse(w, res, http.StatusInternalServerError)
 		return
 	}
 
-	res := view.Response{
-		Message: "success",
-		Data:    nil,
+	viewUser := view.User{
+		ID:        user.ID,
+		Name:      user.Name,
+		Age:       user.Age,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
 	}
 
-	handleResponse(w, res, http.StatusOK)
+	handleResponse(w, viewUser, http.StatusOK)
 }
 
-func handleResponse(w http.ResponseWriter, res view.Response, status int) {
+func handleResponse(w http.ResponseWriter, res view.User, status int) {
+	w.WriteHeader(status)
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		slog.Warn(fmt.Sprintf("encode response: %v", err))
+	}
+}
+
+func handleErrorResponse(w http.ResponseWriter, res view.ErrorResponse, status int) {
 	w.WriteHeader(status)
 	if err := json.NewEncoder(w).Encode(res); err != nil {
 		slog.Warn(fmt.Sprintf("encode response: %v", err))

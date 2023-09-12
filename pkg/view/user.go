@@ -7,9 +7,8 @@ type CreateUserRequest struct {
 	Age  int    `json:"age"`
 }
 
-type Response struct {
+type ErrorResponse struct {
 	Message string `json:"message"`
-	Data    any    `json:"data"`
 }
 
 type User struct {
