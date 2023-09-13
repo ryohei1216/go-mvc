@@ -1,0 +1,45 @@
+version: "3"
+services:
+  app:
+    container_name: test_app
+    build: 
+      context: .
+      dockerfile: ./docker/dev/Dockerfile
+    tty: true
+    stdin_open: true
+    ports:
+      - 8080:8080
+    environment:
+      - DB_HOST=mysql_db
+      - DB_USER=root
+      - DB_PASSWORD=password
+      - DB_NAME=test_db
+    networks:
+      - test_network
+    depends_on:
+      db:
+        condition: service_healthy
+  
+  db:
+    container_name: mysql_db
+    image: mysql:8.0
+    environment:
+      - MYSQL_DATABASE=test_db
+      - MYSQL_ROOT_PASSWORD=password
+    ports:
+      - 3306:3306
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-u", "root", "-ppassword"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - test_network
+    volumes:
+      - db-data:/var/lib/mysql
+  
+volumes:
+  db-data:
+
+networks:
+  test_network:
