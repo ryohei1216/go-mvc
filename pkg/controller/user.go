@@ -34,7 +34,7 @@ func (u *userControllerImpl) Get(w http.ResponseWriter, r *http.Request) {
 	if err := u.db.First(&user, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			res := view.ErrorResponse{
-				Message: "not found",
+				Message: http.StatusText(http.StatusNotFound),
 			}
 
 			handleErrorResponse(w, res, http.StatusNotFound)
@@ -42,7 +42,7 @@ func (u *userControllerImpl) Get(w http.ResponseWriter, r *http.Request) {
 		}
 
 		res := view.ErrorResponse{
-			Message: "internal server error",
+			Message: http.StatusText(http.StatusInternalServerError),
 		}
 
 		handleErrorResponse(w, res, http.StatusInternalServerError)
@@ -68,7 +68,7 @@ func (u *userControllerImpl) Create(w http.ResponseWriter, r *http.Request) {
 
 	if err := dec.Decode(&req); err != nil {
 		res := view.ErrorResponse{
-			Message: "bad request",
+			Message: http.StatusText(http.StatusBadRequest),
 		}
 
 		handleErrorResponse(w, res, http.StatusBadRequest)
@@ -82,7 +82,7 @@ func (u *userControllerImpl) Create(w http.ResponseWriter, r *http.Request) {
 
 	if err := u.db.Create(&user).Error; err != nil {
 		res := view.ErrorResponse{
-			Message: "internal server error",
+			Message: http.StatusText(http.StatusInternalServerError),
 		}
 
 		handleErrorResponse(w, res, http.StatusInternalServerError)
