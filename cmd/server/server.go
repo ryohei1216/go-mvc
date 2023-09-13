@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"log/slog"
 	"net/http"
 
@@ -13,10 +12,13 @@ func main() {
 	db, err := db.New()
 	if err != nil {
 		slog.Error(err.Error())
-		panic("failed to connect database")
+		panic(err)
 	}
 
 	r := router.New(db)
 
-	log.Fatal(http.ListenAndServe(":8080", r))
+	if err := http.ListenAndServe(":8080", r); err != nil {
+		slog.Error(err.Error())
+		panic(err)
+	}
 }
